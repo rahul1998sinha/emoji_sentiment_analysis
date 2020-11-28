@@ -91,6 +91,8 @@ class Model(object):
         hist = model.fit(embedding_mat_train, train, epochs=50, batch_size=32, shuffle=True)
         pred = model.predict_classes(embedding_mat_test)
         # Printing the sentences with the predicted and the labelled emoji
+        acc = float(sum(pred == testset)) / embedding_matrix_test.shape[0]
+        print("LSTM Accuracy Score - "+str(acc))
         test = pd.read_csv('test_emoji.csv', header=None)
         for ix in range(embedding_mat_test.shape[0]):
 
@@ -99,6 +101,32 @@ class Model(object):
                 print(test[0][ix], end=" ")
                 print(emoji.emojize(emoji_d[pred[ix]], use_aliases=True), end=" ")
                 print(emoji.emojize(emoji_d[testset[ix]], use_aliases=True))
+
+    def model_RNN(self, embedding_mat_train, embedding_mat_test, emoji_d, train, testset):
+        # A simple LSTM network
+        model = Sequential()
+        model.add(SimpleRNN(64, input_shape=(10, 50), return_sequences=True))
+        model.add(Dropout(0.5))
+        model.add(SimpleRNN(64, return_sequences=False))
+        model.add(Dropout(0.5))
+        model.add(Dense(5))
+        model.add(Activation('softmax'))
+        # Setting Loss ,Optimiser for model
+        model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+        # Training model
+        hist = model.fit(embedding_mat_train, train, epochs=50, batch_size=32, shuffle=True)
+        pred = model.predict_classes(embedding_mat_test)
+        # Printing the sentences with the predicted and the labelled emoji
+        acc = float(sum(pred == testset)) / embedding_matrix_test.shape[0]
+        print("RNN Accuracy Score - "+str(acc))
+        test = pd.read_csv('test_emoji.csv', header=None)
+        for ix in range(embedding_mat_test.shape[0]):
+            if pred[ix] != testset[ix]:
+                print(ix)
+                print(test[0][ix], end=" ")
+                print(emoji.emojize(emoji_d[pred[ix]], use_aliases=True), end=" ")
+                print(emoji.emojize(emoji_d[testset[ix]], use_aliases=True))
+
 
     def glove_query_convert(self, s, embeddings_index):
         s = s.split()
@@ -119,7 +147,7 @@ class Model(object):
         # Setting Loss ,Optimiser for model
         model_LSTM.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
         # Training model
-        hist = model_LSTM.fit(embedding_mat_train, train, epochs=100, batch_size=32, shuffle=True)
+        hist = model_LSTM.fit(embedding_mat_train, train, epochs=50, batch_size=32, shuffle=True)
         return model_LSTM
 
     def single_query_model_RNN(self, embedding_mat_train, train):
@@ -148,8 +176,10 @@ class Model(object):
         # can return index of emoji,use emoji_dict
 
 
+
+
 if __name__ == '__main__':
-    print("Training Model------")
+    print("Training Model------LSTM")
     model = Model()
     emoji_dic = model.emoji_dept()
     train_x, train_y, test_x, test_y = model.data_modeling()
@@ -157,7 +187,7 @@ if __name__ == '__main__':
     embedding_matrix_train, embedding_matrix_test = model.glove_file(train_x, test_x, embed_index)
 
     LSTM = model.single_query_model_LSTM(embedding_matrix_train, train_y)
-    print("Training Model Done-----")
+    print("Training Model Done-----LSTM")
     c = "y"
     while c == "y":
         input_string = input(" ENTER THE QUERY")
